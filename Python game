@@ -1,0 +1,102 @@
+import time, random, glob, sqlite3, tkinter, tkinter.messagebox
+
+def auswertung():
+    if status !="main" :
+        return
+    endzeit= time.time()
+    differenz=endzeit-startzeit
+
+    richtig=0
+    for i in range(5):
+        try:
+            if int(enliste[i].get())==ergliste[i]:
+                richtig=richtig+1
+        except:
+            pass
+
+
+    if richtig < 5:
+        tkinter.messagebox.showinfo("Kein Highscore", "Leider kein Highscore")
+        main.destroy()
+        return
+
+    if not glob.glob("gui_highscore.db"):
+        con = sqlite3.connect("gui_highscore.db")
+        cursor=con.cursor()
+        sql="CREATE TABLE daten(name TEXT, zeit REAL)"
+        cursor.execute(sql)
+        con.close()
+
+
+    con= sqlite3.connect("gui_highscore.db")
+    cursor=con.cursor()
+    sql="INSERT INTO daten VALUES('" \
+        + lbname["text"]+ "'," + str(differenz) + ")"
+    cursor.execute(sql)
+    con.commit()
+    con.close()
+
+
+    con=sqlite3.connect("gui_highscore.db")
+    cursor=con.cursor()
+    sql="SELECT * FROM daten ORDER BY zeit LIMIT 10"
+    cursor.execute(sql)
+
+    ausgabe=""
+    i=1
+    for dsatz in cursor:
+        ausgabe += str(i) + ". " + dsatz[0] + " " \
+            + str(round(dsatz[1],2)) + " sec.\n"
+        i=i+1
+    tkinter.messagebox.showinfo("Highscore", ausgabe)
+    con.close()
+    main.destroy()
+
+def endeneu(): 
+    global startzeit, status 
+    lbname["text"]= enname.get()
+    startzeit=time.time()
+    status="main"
+    neu.destroy()
+
+main=tkinter.Tk()
+
+
+lbtitel=tkinter.Label(main, text="Kopfrechnen")
+lbtitel.grid(row=0, column=0, columnspan=6)
+
+lbname= tkinter.Label(main, text="Spielername")
+lbname.grid(row=1, column=0, columnspan=6)
+
+
+enliste=[]
+ergliste=[]
+for i in range(5):
+    a=random.randint(10,30)
+    b=random.randint(10,30)
+    ergliste.append(a+b)
+
+
+    tkinter.Label(main, text=str(i+1)+"."). \
+        grid(row=i+2, column=0)
+    tkinter.Label(main, text=a).grid(row=i+2, column=1)
+    tkinter.Label(main, text="+").grid(row=i+2, column=2)
+    tkinter.Label(main, text=b).grid(row=i+2, column=3)
+    tkinter.Label(main, text="=").grid(row=i+2, column=4)
+
+
+    en=tkinter.Entry(main)
+    en.grid(row=i+2,column=5)
+    enliste.append(en)
+
+b=tkinter.Button(main, text="Fertig", command=auswertung)
+b.grid(row=7, column=0, columnspan=6)
+
+neu=tkinter.Toplevel(main)
+tkinter.Label(neu, text="Ihr Name:").pack()
+enname=tkinter.Entry(neu)
+enname.pack()
+tkinter.Button(neu, text="Start", command=endeneu).pack()
+status="neu"
+
+main.mainloop()
